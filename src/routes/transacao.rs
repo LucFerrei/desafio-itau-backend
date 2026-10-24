@@ -7,13 +7,14 @@ use thiserror::Error;
 
 #[derive(Debug, Deserialize)]
 struct TrasacaoPayload {
+    #[serde(alias = "valor")]
     value: f64,
     #[serde(alias = "dataHora")]
     date_time: DateTime<FixedOffset>,
 }
 
 pub fn transacao_route() -> Router {
-    Router::new().route("/", post(transacao))
+    Router::new().route("/transacao", post(transacao))
 }
 
 async fn transacao(Json(payload): Json<TrasacaoPayload>) -> Result<Json<Value>, AppError> {
