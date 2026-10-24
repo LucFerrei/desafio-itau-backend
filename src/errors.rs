@@ -1,3 +1,4 @@
+use crate::routes::transacao::TransacaoError;
 use axum::{Json, http::StatusCode, response::IntoResponse};
 use serde_json::json;
 use thiserror::Error;
@@ -6,6 +7,9 @@ use thiserror::Error;
 pub enum AppError {
     #[error("Internal Error")]
     InternalError,
+
+    #[error("TransacaoError: {0}")]
+    TransacaoError(#[from] TransacaoError),
 }
 
 impl IntoResponse for AppError {
@@ -15,6 +19,8 @@ impl IntoResponse for AppError {
                 StatusCode::BAD_REQUEST,
                 "Has something wrong with your request".to_string(),
             ),
+
+            AppError::TransacaoError(e) => (StatusCode::UNPROCESSABLE_ENTITY, e.to_string()),
         };
 
         let body = Json(json!({
