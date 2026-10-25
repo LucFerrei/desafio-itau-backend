@@ -1,31 +1,35 @@
-use crate::errors::AppError;
-use axum::{Json, Router, routing::post};
+use crate::{app::AppState, errors::AppError};
+use axum::{Json, Router, extract::State, routing::post};
 use chrono::{DateTime, FixedOffset};
 use serde::Deserialize;
 use serde_json::{Value, json};
 use thiserror::Error;
 
+pub fn transacao_route(app_state: AppState) -> Router {
+    Router::new()
+        .route("/transacao", post(transacao))
+        .with_state(app_state)
+}
+
 #[derive(Debug, Deserialize)]
-struct TrasacaoPayload {
+pub struct TransacaoPayload {
     #[serde(alias = "valor")]
-    value: f64,
+    pub value: f64,
     #[serde(alias = "dataHora")]
-    date_time: DateTime<FixedOffset>,
+    pub date_time: DateTime<FixedOffset>,
 }
 
-pub fn transacao_route() -> Router {
-    Router::new().route("/transacao", post(transacao))
-}
+// TODO:
+async fn transacao(
+    State(state): State<AppState>,
+    Json(payload): Json<TransacaoPayload>,
+) -> Result<Json<Value>, AppError> {
+    state
+        .transacao_service
+        .insert_transacao(payload.value, payload.date_time)
+        .await?;
 
-async fn transacao(Json(payload): Json<TrasacaoPayload>) -> Result<Json<Value>, AppError> {
-    if payload.date_time > chrono::Utc::now() {
-        return Err(AppError::TransacaoError(TransacaoError::TimeError));
-    }
-
-    if payload.value < 0.0 {
-        return Err(AppError::TransacaoError(TransacaoError::ValueError));
-    }
-
+    // FIX: fix this json. into response
     Ok(Json(json!({
         "code": "201",
     })))
@@ -38,4 +42,5 @@ pub enum TransacaoError {
 
     #[error("Transaction cannot have negative value")]
     ValueError,
+    //TODO: add Json Error message
 }
