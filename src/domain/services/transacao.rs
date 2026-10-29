@@ -1,10 +1,12 @@
 use std::sync::{Arc, Mutex};
 
-use chrono::{DateTime, FixedOffset};
+use chrono::{DateTime, FixedOffset, Utc};
 
 use crate::{
-    domain::transacao_model::Transacao, errors::AppError,
-    port::transacao_repository::TransacaoRepository, routes::transacao::TransacaoError,
+    domain::{estatistica_model::Estatistica, transacao_model::Transacao},
+    errors::AppError,
+    port::transacao_repository::TransacaoRepository,
+    routes::transacao::TransacaoError,
 };
 
 pub struct TransacaoService {
@@ -48,5 +50,18 @@ impl TransacaoService {
         self.repo.insert_transacao(transacao).await.unwrap();
 
         Ok(())
+    }
+
+    pub async fn get_estatistica(&self, time_diff: i64) -> Result<Estatistica, AppError> {
+        let max = Utc::now();
+        let min = max - chrono::TimeDelta::seconds(time_diff);
+
+        // TODO: remove this unwrap
+        // add repo error in app error
+        let transacoes = self.repo.get_all_transacoes(min, max).await.unwrap();
+        println!("{:#?}", &transacoes);
+
+        let estatistica = Estatistica::from_transacoes(&transacoes);
+        Ok(estatistica)
     }
 }

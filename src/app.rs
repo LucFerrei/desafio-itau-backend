@@ -1,6 +1,9 @@
 use std::sync::Arc;
 
-use crate::{domain::services::transacao::TransacaoService, routes::transacao::transacao_route};
+use crate::{
+    domain::services::transacao::TransacaoService,
+    routes::{estatistica::estatistica_route, transacao::transacao_route},
+};
 use axum::Router;
 
 #[derive(Clone)]
@@ -9,5 +12,7 @@ pub struct AppState {
 }
 
 pub fn create_app(app_state: AppState) -> Router {
-    Router::new().merge(transacao_route(app_state))
+    Router::new()
+        .merge(transacao_route(app_state.clone()))
+        .merge(estatistica_route(app_state))
 }
