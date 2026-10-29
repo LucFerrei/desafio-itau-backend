@@ -4,7 +4,7 @@ use serde::Deserialize;
 #[derive(Debug, Deserialize, Clone, PartialEq)]
 pub struct Transacao {
     pub id: usize,
-    value: f64,
+    pub value: f64,
     pub date_time: DateTime<Utc>,
 }
 
